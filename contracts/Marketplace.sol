@@ -36,15 +36,17 @@ contract Marketplace is IMarketplace, AccessControl {
     }
 
     function createItem(string calldata tokenURI, address owner, bool is1155, uint256 amount) external override onlyRole(DEFAULT_ADMIN_ROLE) {
-        if (is1155) {
-            Token1155 newNFT = new Token1155(tokenURI);
-            _ownersToNFTs[owner] = address(newNFT);
-            newNFT.mint(owner, 0, amount);
-        } else {
-            Token721 newNFT = new Token721("Test token", "TST");
-            _ownersToNFTs[owner] = address(newNFT);
-            newNFT.mint(owner, 1);
-            newNFT.setTokenURI(0, tokenURI);
-        }
+    //     if (is1155) {
+    //         Token1155 newNFT = new Token1155(tokenURI);
+    //         _ownersToNFTs[owner] = address(newNFT);
+    //         newNFT.mint(owner, 0, amount);
+    //     } else {
+    //         Token721 newNFT = new Token721("Test token", "TST");
+    //         _ownersToNFTs[owner] = address(newNFT);
+    //         newNFT.mint(owner, 1);
+    //         newNFT.setTokenURI(0, tokenURI);
+    //     }
+        // тут надо минтить на контракте, который в конфиге сеттишь e.g.
+        is1155 ? token1155.mint() : token721.mint();
     }
 }
