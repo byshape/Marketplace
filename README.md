@@ -1,10 +1,11 @@
 # Description
-There are standard ERC721 and ERC1155 smart contracts. Their main features:
-* ERC721 receives name and symbol to constructor.
-* ERC721 and ERC1155 mint tokens by contract minter role to an account.
-* ERC721 and ERC1155 burn tokens from an account.
-* ERC721 and ERC1155 set up the tokens' metadata URI.
-* ERC721 and ERC1155 return the tokens' metadata URI.
+There is marketplace contract for buying and selling ERC721 and ERC1155 tokens. It's main features:
+* Marketplace mints tokens to the caller.
+* Marketplace lists items for sale and auction.
+* Marketplace cancels listings.
+* Marketplace sells items.
+* Marketplace accepts bids for listings.
+* Marketplace ends auction.
 
 ## Launch instructions
 Run this command in terminal
@@ -16,8 +17,8 @@ When installation process is finished, create `.env` file and add `API_URL`, `PR
 Run:
 * `npx hardhat test` to run tests
 * `npx hardhat coverage` to get coverage report
-* `npx hardhat run --network rinkeby scripts/deploy-721.js` to deploy ERC721 smart contract to the rinkeby testnet
-* `npx hardhat run --network rinkeby scripts/deploy-1155.js` to deploy ERC1155 smart contract to the rinkeby testnet
-* `npx hardhat verify --network rinkeby DEPLOYED_CONTRACT_ADDRESS` to verify staking contract or ERC20 tokens
-* `npx hardhat help` to get the list of available tasks, including tasks for interaction with deployed contract: mint, burn, uri, setURI.
-`
+* `npx hardhat run --network rinkeby scripts/deploy-20.ts` to deploy ERC20 smart contract to the rinkeby testnet
+* `npx hardhat run --network rinkeby scripts/deploy-721.ts` to deploy ERC721 smart contract to the rinkeby testnet
+* `npx hardhat run --network rinkeby scripts/deploy-1155.ts` to deploy ERC1155 smart contract to the rinkeby testnet
+* `npx hardhat verify --network rinkeby DEPLOYED_CONTRACT_ADDRESS` to verify marketplace contract or tokens
+* `npx hardhat help` to get the list of available tasks, including tasks for interaction with deployed contracts.

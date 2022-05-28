@@ -27,10 +27,10 @@ describe("Token721", function () {
 
   it("Should support Token721 interface", async function () {
     let abi = [
-      "function setTokenURI(uint256,string)", "function mint(address,uint256)",
+      "function setBaseURI(string)", "function mint(address,uint256)",
       "function burn(uint256)"
     ];
-    let functions = ["setTokenURI", "mint", "burn"];
+    let functions = ["setBaseURI", "mint", "burn"];
     expect(await token.connect(admin).supportsInterface(await getInterface(abi, functions))).to.be.equal(true);
   });
 
@@ -63,28 +63,17 @@ describe("Token721", function () {
     expect(await token.connect(admin).supportsInterface(await getInterface(abi, functions))).to.be.equal(true);
   });
 
-  it("Does not get token URI for non-existent token", async () => {
-    await expect(token.connect(admin).tokenURI(0)).to.be.revertedWith("DoesNotExist");
-  });
-
-  it("Does not set token URI for non-existent token", async () => {
-    await expect(token.connect(admin).setTokenURI(0, "")).to.be.revertedWith("DoesNotExist");
-  });
-
-  it("Does not mint zero tokens", async () => {
-    await expect(token.connect(admin).mint(user.address, 0)).to.be.revertedWith("InvalidData");
-  });
-
   it("Sets token URI", async () => {
-    expect(await token.connect(admin).mint(user.address, 3)).to.emit(token, "Transfer").withArgs(ethers.constants.AddressZero, user.address);
-    expect(await token.tokenURI(tokenCounter)).to.be.equal("");
-    let uriString: string = "test";
-    expect(await token.connect(admin).setTokenURI(0, uriString)).to.emit(token, "UpdateURI").withArgs(tokenCounter, uriString);
-    expect(await token.connect(admin).tokenURI(tokenCounter)).to.be.equal(uriString);
+    let tokenId: number  = 0;
+    expect(await token.connect(admin).mint(user.address, tokenId)).to.emit(token, "Transfer").withArgs(ethers.constants.AddressZero, user.address, tokenId);
+    expect(await token.tokenURI(tokenId)).to.be.equal("");
+    let uriString: string = "test/";
+    expect(await token.connect(admin).setBaseURI(uriString)).to.emit(token, "UpdateURI").withArgs(uriString);
+    expect(await token.connect(admin).tokenURI(tokenId)).to.be.equal(uriString + tokenId.toString());
   });
 
   it("Does not set empty token URI", async () => {
-    await expect(token.connect(admin).setTokenURI(0, "")).to.be.revertedWith("InvalidData");
+    await expect(token.connect(admin).setBaseURI("")).to.be.revertedWith("InvalidData");
   });
 
   it("Does not burn non-existent token", async () => {
@@ -92,11 +81,13 @@ describe("Token721", function () {
   });
 
   it("Does not burn token by the non-owner", async () => {
-    await expect(token.connect(admin).burn(tokenCounter)).to.be.revertedWith("NotAuthorized");
+    let tokenId: number  = 0;
+    await expect(token.connect(admin).burn(tokenId)).to.be.revertedWith("NotAuthorized");
   });
 
   it("Burns token by the owner", async () => {
-    expect(await token.connect(user).ownerOf(tokenCounter)).to.be.equal(user.address);
-    expect(await token.connect(user).burn(tokenCounter)).to.emit(token, "Transfer").withArgs(user.address, ethers.constants.AddressZero);
+    let tokenId: number  = 0;
+    expect(await token.connect(user).ownerOf(tokenId)).to.be.equal(user.address);
+    expect(await token.connect(user).burn(tokenId)).to.emit(token, "Transfer").withArgs(user.address, ethers.constants.AddressZero);
   });
 });

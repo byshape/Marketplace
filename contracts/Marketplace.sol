@@ -2,49 +2,45 @@
 pragma solidity ^0.8.4;
 
 import "@openzeppelin/contracts/access/AccessControl.sol";
-// import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
-// import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
-import "./interfaces/IToken721.sol";
-import "./interfaces/IToken1155.sol";
 import "./interfaces/IMarketplace.sol";
 
-import "./Token721.sol";
-import "./Token1155.sol";
+import "./Marketplace721.sol";
+import "./Marketplace1155.sol";
 
-contract Marketplace is IMarketplace, AccessControl {
-    // using SafeERC20 for IERC20;
+/// @title Marketplace contract to sell and buy ERC721 and ERC1155 tokens
+/// @author Xenia Shape
+/// @notice This contract can be used for only the most basic marketplace test experiments
+contract Marketplace is IMarketplace, Marketplace1155, Marketplace721, AccessControl {
 
-    IToken721 public token721;
-    IToken1155 public token1155;
-    IERC20 public token20;
-
-    mapping(address => address) public _ownersToNFTs;
-    
     constructor() {
         _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
     }
 
+    /// @notice Function for checking interface support
+    /// @param interfaceId The ID of the interface to check
+    function supportsInterface(bytes4 interfaceId) public view override(ERC1155Receiver, AccessControl) returns (bool) {
+        return
+            interfaceId == type(IMarketplace).interfaceId ||
+            interfaceId == type(IMarketplace1155).interfaceId ||
+            interfaceId == type(IMarketplace721).interfaceId ||
+            super.supportsInterface(interfaceId);
+    }
+
+    /// @notice Function for setting up the marketplace contract
+    /// @param token721_ Token721 address
+    /// @param token1155_ Token1155 address
+    /// @param token20_ ERC20 token address
+    /// @param auctionDuration_ Duration of the auction in seconds
     function setUpConfig(
-        IToken721 token721_,
-        IToken1155 token1155_,
-        IERC20 token20_
+        address token721_,
+        address token1155_,
+        address token20_,
+        uint256 auctionDuration_
     ) external override onlyRole(DEFAULT_ADMIN_ROLE) {
         token721 = token721_;
         token1155 = token1155_;
         token20 = token20_;
-    }
-
-    function createItem(string calldata tokenURI, address owner, bool is1155, uint256 amount) external override onlyRole(DEFAULT_ADMIN_ROLE) {
-        if (is1155) {
-            Token1155 newNFT = new Token1155(tokenURI);
-            _ownersToNFTs[owner] = address(newNFT);
-            newNFT.mint(owner, 0, amount);
-        } else {
-            Token721 newNFT = new Token721("Test token", "TST");
-            _ownersToNFTs[owner] = address(newNFT);
-            newNFT.mint(owner, 1);
-            newNFT.setTokenURI(0, tokenURI);
-        }
+        auctionDuration = auctionDuration_;
     }
 }

@@ -1,3 +1,4 @@
+import fs from 'fs';
 import { ethers } from "hardhat";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 
@@ -11,6 +12,8 @@ async function main() {
   const erc721 = await erc721Factory.deploy("Test NFT token", "TNFT");
   await erc721.deployed();
   console.log(`erc721 ${erc721.address}`);
+  fs.appendFileSync(`.env`, 
+    `\rERC721_ADDRESS=${erc721.address}\r`)
 }
 
 main().catch((error) => {

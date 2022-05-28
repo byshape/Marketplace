@@ -1,8 +1,9 @@
 //SPDX-License-Identifier: MIT
 pragma solidity ^0.8.4;
 
-import "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
 import "@openzeppelin/contracts/access/AccessControl.sol";
+import "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
+import "@openzeppelin/contracts/utils/Counters.sol";
 
 import "./interfaces/IToken1155.sol";
 
@@ -10,9 +11,6 @@ import "./interfaces/IToken1155.sol";
 /// @author Xenia Shape
 /// @notice This contract can be used for only the most basic ERC1155 test experiments
 contract Token1155 is AccessControl, ERC1155, IToken1155 {
-    error InvalidData();
-
-    event UpdateURI(string uri);
 
     bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
 
@@ -23,18 +21,23 @@ contract Token1155 is AccessControl, ERC1155, IToken1155 {
 
     /// @notice Function for minting tokens to account
     /// @param to Address of the account to mint tokens
-    /// @param id ID of token to mint
+    /// @param tokenId Token id for mint
     /// @param amount Amount of tokens to mint
     /// @dev Function does not allow to mint zero tokens
-    function mint(address to, uint256 id, uint256 amount) external override onlyRole(MINTER_ROLE) {
+    /// @dev Function does not allow to mint to the zero address
+    /// @dev Function emits TransferSingle event
+    function mint(address to, uint256 tokenId, uint256 amount) external override onlyRole(MINTER_ROLE) {
         if(amount == 0) revert InvalidData();
-        _mint(to, id, amount, "");
+        _mint(to, tokenId, amount, "");
     }
 
     /// @notice Function for burning tokens by the account
     /// @param id The ID of the token to burn
     /// @param amount Amount of tokens to burn
     /// @dev Function does not allow to burn zero tokens
+    /// @dev Function does not allow to burn from the zero address
+    /// @dev Function does not allow to burn tokens more than balance
+    /// @dev Function emits TransferSingle event
     function burn(uint256 id, uint256 amount) external override {
         if(amount == 0) revert InvalidData();
         _burn(msg.sender, id, amount);
@@ -43,6 +46,7 @@ contract Token1155 is AccessControl, ERC1155, IToken1155 {
     /// @notice Function for setting up the base tokens URI
     /// @param newuri The new base URI
     /// @dev Function does not allow to set up empty URI
+    /// @dev Function emits UpdateURI event
     function setURI(string memory newuri) external override onlyRole(DEFAULT_ADMIN_ROLE) {
          // check string not empty
         if(bytes(newuri).length == 0) revert InvalidData();
@@ -53,7 +57,7 @@ contract Token1155 is AccessControl, ERC1155, IToken1155 {
 
     /// @notice Function for checking interface support
     /// @param interfaceId The ID of the interface to check
-    function supportsInterface(bytes4 interfaceId) public view override(AccessControl, ERC1155, IERC165) returns (bool) {
+    function supportsInterface(bytes4 interfaceId) public view override(AccessControl, ERC1155) returns (bool) {
         return
             interfaceId == type(IToken1155).interfaceId ||
             super.supportsInterface(interfaceId);
@@ -66,7 +70,7 @@ contract Token1155 is AccessControl, ERC1155, IToken1155 {
         return string(
             abi.encodePacked(
                 super.uri(_tokenid),
-                Strings.toString(_tokenid),".json"
+                Strings.toString(_tokenid)
             )
         );
     }

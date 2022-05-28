@@ -1,9 +1,8 @@
 //SPDX-License-Identifier: MIT
 pragma solidity ^0.8.4;
 
-import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/access/AccessControl.sol";
-import "@openzeppelin/contracts/utils/Counters.sol";
+import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 
 import "./interfaces/IToken721.sol";
 
@@ -11,20 +10,8 @@ import "./interfaces/IToken721.sol";
 /// @author Xenia Shape
 /// @notice This contract can be used for only the most basic ERC721 test experiments
 contract Token721 is AccessControl, ERC721, IToken721 {
-    using Counters for Counters.Counter;
-
-    error DoesNotExist();
-    error InvalidData();
-    error NotAuthorized();
-
-    event UpdateURI(uint256 tokenId, string uri);
-    
     bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
-
-    Counters.Counter private _tokenIdTracker;
-
-    // token id => URI
-    mapping(uint256 => string) public _tokenURI;
+    string private _uri;
 
     constructor(string memory name_, string memory symbol_) ERC721(name_, symbol_) {
         _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
@@ -33,20 +20,18 @@ contract Token721 is AccessControl, ERC721, IToken721 {
 
     /// @notice Function for minting tokens to account
     /// @param to Address of the account to mint tokens
-    /// @param amount Amount of tokens to mint
+    /// @param tokenId Token id for mint
     /// @dev Function does not allow to mint zero tokens
-    function mint(address to, uint256 amount) external override onlyRole(MINTER_ROLE) {
-        if(amount == 0) revert InvalidData();
-        for (uint256 i=0; i < amount; i++) {
-            _safeMint(to, _tokenIdTracker.current());
-            _tokenIdTracker.increment();
-        }
+    /// @dev Function emits Transfer event
+    function mint(address to, uint256 tokenId) external override onlyRole(MINTER_ROLE) {
+        _safeMint(to, tokenId);
     }
 
     /// @notice Function for burning tokens by the account
     /// @param tokenId The ID of the token to burn
     /// @dev Function does not allow to burn non-existent token
     /// @dev Function does not allow to burn not owned or approved tokens
+    /// @dev Function emits Transfer and Approval events
     function burn(uint256 tokenId) external override{
         // check that token exists
         if (!_exists(tokenId)) revert DoesNotExist();
@@ -55,34 +40,28 @@ contract Token721 is AccessControl, ERC721, IToken721 {
         _burn(tokenId);
     }
 
-    /// @notice Function for setting up the token's URI
-    /// @param tokenId The ID of the token
-    /// @dev Function does not allow to set up URI for non-existent token
+    /// @notice Function for setting up the base URI
+    /// @param uri Base URI to set
     /// @dev Function does not allow to set up empty URI
-    function setTokenURI(uint256 tokenId, string calldata uri) external override onlyRole(DEFAULT_ADMIN_ROLE) {
-        // check id exists
-        if (!_exists(tokenId)) revert DoesNotExist();
+    /// @dev Function emits UpdateURI event
+    function setBaseURI(string calldata uri) external override onlyRole(DEFAULT_ADMIN_ROLE) {
         // check string not empty
         if(bytes(uri).length == 0) revert InvalidData();
-        _tokenURI[tokenId] = uri;
+        _uri = uri;
 
-        emit UpdateURI(tokenId, uri);
+        emit UpdateURI(uri);
     }
 
     /// @notice Function for checking interface support
     /// @param interfaceId The ID of the interface to check
-    function supportsInterface(bytes4 interfaceId) public view override(AccessControl, ERC721, IERC165) returns (bool) {
+    function supportsInterface(bytes4 interfaceId) public view override(AccessControl, ERC721) returns (bool) {
         return
             interfaceId == type(IToken721).interfaceId ||
             super.supportsInterface(interfaceId);
     }
 
-    /// @notice Function for returning the token's URI
-    /// @param tokenId The ID of the token
-    /// @dev Function does not allow to get URI of non-existent token
-    function tokenURI(uint256 tokenId) public view virtual override returns (string memory) {
-        if (!_exists(tokenId)) revert DoesNotExist();
-
-        return _tokenURI[tokenId];
+    /// @notice Function for getting the base URI
+    function _baseURI() internal view virtual override returns (string memory) {
+        return _uri;
     }
 }

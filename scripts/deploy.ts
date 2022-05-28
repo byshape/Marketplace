@@ -1,29 +1,34 @@
-// We require the Hardhat Runtime Environment explicitly here. This is optional
-// but useful for running the script in a standalone fashion through `node <script>`.
-//
-// When running the script with `npx hardhat run <script>` you'll find the Hardhat
-// Runtime Environment's members available in the global scope.
 import { ethers } from "hardhat";
+import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
+import { Token721, Token1155 } from "../typechain";
+
 
 async function main() {
-  // Hardhat always runs the compile task when running scripts with its command
-  // line interface.
-  //
-  // If this script is run directly using `node` you may want to call compile
-  // manually to make sure everything is compiled
-  // await hre.run('compile');
+  let admin: SignerWithAddress;
+  [admin] = await ethers.getSigners();
 
-  // We get the contract to deploy
-  const Greeter = await ethers.getContractFactory("Greeter");
-  const greeter = await Greeter.deploy("Hello, Hardhat!");
+  const auctionDuration: number = 3 * 60; // 3 minutes
+  const MINTER_ROLE: string = ethers.utils.keccak256(ethers.utils.toUtf8Bytes("MINTER_ROLE"));
 
-  await greeter.deployed();
+  // deploy token
+  const marketplaceFactory = await ethers.getContractFactory("Marketplace", admin);
+  const marketplace = await marketplaceFactory.deploy();
+  await marketplace.deployed();
+  console.log(`marketplace ${marketplace.address}`);
 
-  console.log("Greeter deployed to:", greeter.address);
+  const erc20 = process.env.ERC20_ADDRESS as string;
+  const erc721 = <Token721>(await ethers.getContractAt("Token721", process.env.ERC721_ADDRESS as string));
+  const erc1155 = <Token1155>(await ethers.getContractAt("Token1155", process.env.ERC1155_ADDRESS as string));
+  await erc721.grantRole(MINTER_ROLE, marketplace.address);
+  await erc1155.grantRole(MINTER_ROLE, marketplace.address);
+
+  console.log(`erc20 ${erc20}, erc721 ${erc721.address}, erc1155 ${erc1155.address}`);
+
+  await marketplace.setUpConfig(erc721.address, erc1155.address, erc20, auctionDuration.toString());
+  console.log("Config was set up");
+
 }
 
-// We recommend this pattern to be able to use async/await everywhere
-// and properly handle errors.
 main().catch((error) => {
   console.error(error);
   process.exitCode = 1;

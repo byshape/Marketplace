@@ -65,7 +65,7 @@ describe("Token1155", function () {
   });
 
   it("Gets token URI for token", async () => {
-    expect(await token.connect(admin).uri(0)).to.be.equal(DEFAULT_URI + "0.json");
+    expect(await token.connect(admin).uri(0)).to.be.equal(DEFAULT_URI + "0");
   });
 
   it("Does not set token URI by the non-admin", async () => {
@@ -90,10 +90,10 @@ describe("Token1155", function () {
   });
 
   it("Sets token URI", async () => {
-    expect(await token.uri(0)).to.be.equal(DEFAULT_URI + "0.json");
+    expect(await token.uri(0)).to.be.equal(DEFAULT_URI + "0");
     let uriString: string = "test";
     expect(await token.connect(admin).setURI(uriString)).to.emit(token, "UpdateURI").withArgs(uriString);
-    expect(await token.connect(admin).uri(0)).to.be.equal(uriString + "0.json");
+    expect(await token.connect(admin).uri(0)).to.be.equal(uriString + "0");
   });
 
   it("Does not burn tokens more than balance", async () => {

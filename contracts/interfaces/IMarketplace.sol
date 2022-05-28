@@ -1,14 +1,11 @@
 //SPDX-License-Identifier: MIT
 pragma solidity ^0.8.4;
 
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-
-// import "./IToken20.sol";
-import "./IToken721.sol";
-import "./IToken1155.sol";
-
 interface IMarketplace {
-    function setUpConfig(IToken721 token721_, IToken1155 token1155_, IERC20 token20_) external;
-    
-    function createItem(string calldata tokenURI, address owner, bool is1155, uint256 amount) external;
+    /// @notice Function for setting up the marketplace contract
+    /// @param token721_ Token721 address
+    /// @param token1155_ Token1155 address
+    /// @param token20_ ERC20 token address
+    /// @param auctionDuration_ Duration of the auction in seconds
+    function setUpConfig(address token721_, address token1155_, address token20_, uint256 auctionDuration_) external;
 }
